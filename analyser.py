@@ -10,7 +10,9 @@ count2=0
 count3=0
 ipset=set()
 cycle=1
-scale=500
+scale=128
+thread=10
+results=[]
 #scale=os.environ['scale']
 port1 = "5100"
 port2 = "5200"
@@ -25,6 +27,7 @@ elapsedTime=0
 # messagedata = ""
 start_time = time.time()
 elapsedTime=0
+avg=0
 
 app = Flask(__name__)
 @app.route('/')
@@ -45,8 +48,20 @@ def api_root():
 
 @app.route('/results',methods = ['POST'])
 def api_results():
-    print "results"
-    print request.json
+
+    global avg
+    content = {'please move along': 'nothing to see here'}
+    if len(results) < scale * thread:
+     results.append(float(request.json))
+     if len(results)==scale * thread:
+         avg = sum(results) / len(results)
+
+    return "welcome"
+
+
+
+
+
     return 'Welcome'
 
 @app.route('/running',methods = ['POST'])
@@ -56,7 +71,7 @@ def api_running():
 
 @app.route('/logs')
 def api_logs():
-
+    global avg,elapsedTime
     return """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
         "http://www.w3.org/TR/html4/loose.dtd">
 
@@ -65,8 +80,7 @@ def api_logs():
 <title>Hello World Template</title>
 </head>
 <body><p>
-"""+str(elapsedTime)+"""
-<p></body>
+"""+str(elapsedTime)+"""<p><p>"""+str(int(avg))+"""<p></body>
 </html>"""
 
 app.run(host="0.0.0.0",threaded=True)
